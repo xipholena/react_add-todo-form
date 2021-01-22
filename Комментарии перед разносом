@@ -1,0 +1,204 @@
+class App extends React.Component {
+  
+  state = {
+    listOfTodos: [...prepearedTodos], //чтобы фиксировать изменение стейта и перерендеривать не раньше, не позже, а когда меняется массив
+    user: '',
+    todo: '',
+    todoId: 0,
+    inValidSelect: false, //проверки на длину и содержимое инпута, выбран ли юзер и условный рендер
+    inValidLength: false, 
+    isTooLong: false,
+    containsSymbols: false,
+  }
+ 
+  changeInSelect(e) { 
+    this.setState({
+      user: e.target.value,
+      inValidSelect: false,
+    })
+  }
+  formSubmit(e, user, todo, containsSymbols, isTooLong) {
+    e.preventDefault(); //не перезагружается стр
+    if (user.length > 0 && todo.length > 0 && !containsSymbols && !isTooLong) { //очищаем только если были заполнены оба поля, есди хоть одно не заполнено (или неправильно), на этот случай есть по хендлеру
+      this.setState({ //очищаем форму при отправке  
+        user: '',
+        todo: '',
+      })
+    }
+  }
+  changeInput(e) { 
+
+    if(e.target.value.length > 10) { //меняем стейт для условного рендеринга
+      this.setState({
+        isTooLong: true,
+      });
+    } else {
+      this.setState({
+        isTooLong: false,
+      });
+    }
+    
+    if(/[^\w\s]/.test(e.target.value)  ) { //не(^) кириллица и не символы (w), пробелы допустимы(s)
+      this.setState({
+        containsSymbols: true,
+      });
+    } else {
+      this.setState({
+        containsSymbols: false,
+      });
+    }
+
+    this.setState({
+      todo: e.target.value,
+      inValidLength: false,
+    });
+  }
+  clickOnButton(todo, user, todoId, listOfTodos, isTooLong, containsSymbols) {
+    console.log(todoId, todo, user)
+    if (user.length > 0 && todo.length > 0 && !isTooLong && !containsSymbols) {
+      let targetUser = listOfTodos.find(person => (
+        person.name === user //user из стейта
+      ))
+      console.log(targetUser?.todo);
+      targetUser.todo.push({ 
+        userId: targetUser.id,
+        id: todoId,
+        title: todo,
+        completed: false,
+      })
+      this.forceUpdate();
+      this.setState((currentState)=>({
+        todoId: currentState.todoId + 1 //так, если удалить дело из из списка, оно (возможно) всегда будет добавляться к текущему todoId
+      })) 
+      } 
+
+      if (user.length === 0) {
+        this.setState({
+          inValidSelect: true
+        })
+      } 
+      if (todo.length === 0) {
+        this.setState({
+          inValidLength: true
+        })
+      }
+    }
+  render() {
+    const {listOfTodos, user, todo, inValidSelect, inValidLength, 
+      isTooLong, containsSymbols, todoId } = this.state;
+    console.log(listOfTodos);
+    console.log('render');
+    console.log(inValidSelect)
+    return (
+      <div className="App">
+        <h1>Add todo form</h1>
+        <form 
+          method="POST"
+          action="/api/userTodo"
+          onSubmit={(e) => this.formSubmit(e, user, todo, containsSymbols, isTooLong)}
+        >
+          <select
+            name="user" //соотв св-ву в state
+            value={user}  //передаём в state
+            onChange={(e)=> this.changeInSelect(e)}
+          >
+            <option>Choose a user</option>
+            {listOfTodos.map(person => (
+              <option 
+                key={person.id}
+                value={person.name} //передаём в state
+              >
+                {person.name}
+              </option>
+            ))}
+          </select>
+          {inValidSelect && <p>Please choose a user</p>}
+          <label>
+            <input
+              name="todo" 
+              placeholder="Add something to do"
+              value={todo} 
+              onChange={(e)=> this.changeInput(e)}
+            >
+            </input>
+          </label>
+          {inValidLength && <p>Please enter a Todo</p>}
+          {isTooLong && <p>A Todo shouldn't be longer than 10 characters</p>}
+          {containsSymbols 
+            && <p>A Todo should contain only latin characters or digits</p>}
+          <button 
+            type="submit"
+            onClick={() => (
+              this.clickOnButton(todo, user, todoId, listOfTodos, 
+                isTooLong, containsSymbols)
+            )}    
+          >
+            Add
+          </button>
+        </form>
+        <h2>To Do List:</h2>
+        <div className="uno">
+        {listOfTodos.map((user, index) => {
+          console.log(user.todo.length)
+          if(user.todo.length > 0) { //выводить только юзеров, у которых есть дело
+            return (
+              <div 
+                key={user.id}
+                className="tres"
+              > 
+              <p>
+                  User { ' ' }
+                <span className="quatro">{user.name} </span> 
+                  needs to: 
+              </p>
+                {listOfTodos[index].todo.map(item=> (
+                  <p className="dos" key={item.id}> 
+                    <span>{item.title}</span> 
+                    <span>User id: {item.userId} </span> 
+                  </p>
+                ))} 
+              </div>
+            )
+          } 
+          return false //пропуcтить остальные итерации
+        })}
+        </div>
+        
+      </div>
+    )
+  };
+}
+
+
+<Form 
+  user={user}
+  todo={todo}
+  todoId={todoId}
+  containsSymbols={containsSymbols}
+  isTooLong={isTooLong}
+  listOfTodos={listOfTodos}
+  inValidSelect={inValidSelect}
+  inValidLength={inValidLength}
+  changeInSelect={this.changeInSelect}
+  formSubmit={this.formSubmit}
+  changeInput={this.changeInput}
+  clickOnButton={this.clickOnButton}
+/>
+
+user={user}
+todo={todo}
+todoId={todoId}
+containsSymbols={containsSymbols}
+isTooLong={isTooLong}
+listOfTodos={listOfTodos}
+inValidSelect={inValidSelect}
+inValidLength={inValidLength}
+
+changeInSelect={this.changeInSelect}
+formSubmit={this.formSubmit}
+changeInput={this.changeInput}
+clickOnButton={this.clickOnButton}
+
+const {user, todo, todoId, listOfTodos, containsSymbols, 
+isTooLong, inValidSelect, inValidLength,
+changeInSelect, changeInput, formSubmit, clickOnButton} = this.props;
