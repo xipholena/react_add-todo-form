@@ -1,3 +1,7 @@
+const prepearedTodos = users.map(user => ({
+  ...user,
+  todo: todos.filter(todo => user.id === todo.userId),
+}));
 class App extends React.Component {
   
   state = {
