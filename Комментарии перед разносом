@@ -5,7 +5,7 @@ const prepearedTodos = users.map(user => ({
 class App extends React.Component {
   
   state = {
-    listOfTodos: [...prepearedTodos], //чтобы фиксировать изменение стейта и перерендеривать не раньше, не позже, а когда меняется массив
+    listOfTodos: ...prepearedTodos, //чтобы фиксировать изменение стейта и перерендеривать не раньше, не позже, а когда меняется массив
     user: '',
     todo: '',
     todoId: 0,
@@ -57,36 +57,41 @@ class App extends React.Component {
       inValidLength: false,
     });
   }
-  clickOnButton(todo, user, todoId, listOfTodos, isTooLong, containsSymbols) {
-    console.log(todoId, todo, user)
-    if (user.length > 0 && todo.length > 0 && !isTooLong && !containsSymbols) {
-      let targetUser = listOfTodos.find(person => (
-        person.name === user //user из стейта
-      ))
-      console.log(targetUser?.todo);
-      targetUser.todo.push({ 
-        userId: targetUser.id,
-        id: todoId,
-        title: todo,
-        completed: false,
-      })
-      this.forceUpdate();
-      this.setState((currentState)=>({
-        todoId: currentState.todoId + 1 //так, если удалить дело из из списка, оно (возможно) всегда будет добавляться к текущему todoId
-      })) 
-      } 
+  clickOnButton(todo, user, ) {
+    if (this.state.user.length > 0 && this.state.todo.length > 0 
+      && !this.state.isTooLong && !this.state.containsSymbols 
+      && this.state.containsWords) {
 
-      if (user.length === 0) {
-        this.setState({
-          inValidSelect: true
-        })
-      } 
-      if (todo.length === 0) {
-        this.setState({
-          inValidLength: true
-        })
+      const newTodo = {
+        completed: false,
+        id: prepearedTodos.length + 1, //Задание, в реале лучше говорить с бэкендом или юзать библиотеку для генерации строковых id
+        title: todo,
+        user: [users.find(person => person.name === user)], //Потому что в prepearedTodos .find возвращает массив с одним {}
+        userId: users.find(person => person.name === user)?.id,
       }
+      this.setState((state) => {
+        return {
+          listOfTodos: [
+            newTodo,
+            ...state.listOfTodos
+          ]
+        }
+      })
+
     }
+
+    if (user.length === 0) {
+      this.setState({
+        inValidSelect: true,
+      });
+    }
+
+    if (todo.length === 0) {
+      this.setState({
+        inValidLength: true,
+      });
+    }
+  }
   render() {
     const {listOfTodos, user, todo, inValidSelect, inValidLength, 
       isTooLong, containsSymbols, todoId } = this.state;

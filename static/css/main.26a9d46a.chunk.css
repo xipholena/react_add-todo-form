@@ -1,2 +1,0 @@
-*{box-sizing:border-box}.App{justify-content:space-around}.App,.form{display:flex}.form{flex-direction:column}.form__field{margin:20px 0}.form__field--wide{width:100%}.todo-list{margin-left:30px;padding:15px 30px;border:2px solid #a3c86a;border-radius:5px;font-size:25px}.todo-list__todos{background-color:#d7fffc;margin:5px 0;padding:15px}.todo-list__username{font-weight:700}.single-todo{display:flex;justify-content:space-between}
-/*# sourceMappingURL=main.26a9d46a.chunk.css.map */
