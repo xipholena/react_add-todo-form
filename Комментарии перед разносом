@@ -1,14 +1,14 @@
-const prepearedTodos = todos.map(todo => ({
+const preparedTodos = todos.map(todo => ({
   ...todo,
   user: users.filter(user => user.id === todo.userId),
 }));
 
 class App extends React.Component {
   state = {
-    listOfTodos: prepearedTodos,
+    todos: preparedTodos,
     user: '',
     todo: '',
-    inValidSelect: false,
+    isValidSelect: false,
     isEmpty: false,
     isTooLong: false,
     //containsSymbols: false,
@@ -18,17 +18,17 @@ class App extends React.Component {
   changeInSelect(e) {
     if(e.target.value==='none'){ //проверка, чтобы повторно не был вызван дефолтный option "choose a user"
       this.setState({
-        inValidSelect: true
+        isValidSelect: true
       })
      } else {
       this.setState({
         user: e.target.value,
-        inValidSelect: false,
+        isValidSelect: false,
       });
      }
   }
 
-  formSubmit(e) {
+  handleSubmit(e) {
     e.preventDefault();
     if (this.state.user.length > 0 && this.state.todo.length > 0
       /*&& !this.state.containsSymbols*/ && !this.state.isTooLong
@@ -74,29 +74,29 @@ class App extends React.Component {
     
   }
 
-  clickOnButton(todo, user) {
+  addTodo(todo, user) {
     if (this.state.user.length > 0 && this.state.todo.length > 0
       && !this.state.isTooLong /*&& !this.state.containsSymbols*/
       /*&& this.state.containsWords*/) {
       const newTodo = {
         completed: false,
-        id: prepearedTodos.length + 1,
+        id: preparedTodos.length + 1,
         title: todo,
         user: [users.find(person => person.name === user)],
         userId: users.find(person => person.name === user)?.id,
       };
 
       this.setState(state => ({
-        listOfTodos: [
+        todos: [
           newTodo,
-          ...state.listOfTodos,
+          ...state.todos,
         ],
       }));
     }
 
     if (user.length === 0) {
       this.setState({
-        inValidSelect: true,
+        isValidSelect: true,
       });
     }
 
@@ -108,7 +108,7 @@ class App extends React.Component {
   }
 
   render() {
-    const { listOfTodos, user, todo, inValidSelect, isEmpty,
+    const { todos, user, todo, isValidSelect, isEmpty,
       isTooLong, /*containsSymbols,*/ /*containsWords*/ } = this.state;
 
     return (
@@ -119,7 +119,7 @@ class App extends React.Component {
             className="form"
             method="POST"
             action="/api/userTodo"
-            onSubmit={e => this.formSubmit(e, user, todo)}
+            onSubmit={e => this.handleSubmit(e, user, todo)}
           >
             <select
               className="form__field"
@@ -137,7 +137,7 @@ class App extends React.Component {
                 </option>
               ))}
             </select>
-            {inValidSelect && <p>Please choose a user</p>}
+            {isValidSelect && <p>Please choose a user</p>}
             <label>
               <input
                 className="form__field form__field--wide"
@@ -156,13 +156,13 @@ class App extends React.Component {
             <button
               type="submit"
               className="form__field"
-              onClick={() => (this.clickOnButton(todo, user))}
+              onClick={() => (this.addTodo(todo, user))}
             >
               Add
             </button>
           </form>
         </div>
-        <ToDoList listOfTodos={listOfTodos} />
+        <ToDoList todos={todos} />
       </div>
     );
   }
