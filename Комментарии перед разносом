@@ -16,10 +16,16 @@ class App extends React.Component {
   }
 
   changeInSelect(e) {
-    this.setState({
-      user: e.target.value,
-      inValidSelect: false,
-    });
+    if(e.target.value==='none'){ //проверка, чтобы повторно не был вызван дефолтный option "choose a user"
+      this.setState({
+        inValidSelect: true
+      })
+     } else {
+      this.setState({
+        user: e.target.value,
+        inValidSelect: false,
+      });
+     }
   }
 
   formSubmit(e) {
@@ -65,10 +71,7 @@ class App extends React.Component {
       });
     }*/
 
-    this.setState({
-      todo: e.target.value,
-      isEmpty: false,
-    });
+    
   }
 
   clickOnButton(todo, user) {
