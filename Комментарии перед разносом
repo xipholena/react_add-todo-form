@@ -1,38 +1,41 @@
-const prepearedTodos = users.map(user => ({
-  ...user,
-  todo: todos.filter(todo => user.id === todo.userId),
+const prepearedTodos = todos.map(todo => ({
+  ...todo,
+  user: users.filter(user => user.id === todo.userId),
 }));
+
 class App extends React.Component {
-  
   state = {
-    listOfTodos: ...prepearedTodos, //чтобы фиксировать изменение стейта и перерендеривать не раньше, не позже, а когда меняется массив
+    listOfTodos: prepearedTodos,
     user: '',
     todo: '',
-    todoId: 0,
-    inValidSelect: false, //проверки на длину и содержимое инпута, выбран ли юзер и условный рендер
-    inValidLength: false, 
+    inValidSelect: false,
+    isEmpty: false,
     isTooLong: false,
-    containsSymbols: false,
+    //containsSymbols: false,
+   // containsWords: true,
   }
- 
-  changeInSelect(e) { 
+
+  changeInSelect(e) {
     this.setState({
       user: e.target.value,
       inValidSelect: false,
-    })
+    });
   }
-  formSubmit(e, user, todo, containsSymbols, isTooLong) {
-    e.preventDefault(); //не перезагружается стр
-    if (user.length > 0 && todo.length > 0 && !containsSymbols && !isTooLong) { //очищаем только если были заполнены оба поля, есди хоть одно не заполнено (или неправильно), на этот случай есть по хендлеру
-      this.setState({ //очищаем форму при отправке  
+
+  formSubmit(e) {
+    e.preventDefault();
+    if (this.state.user.length > 0 && this.state.todo.length > 0
+      /*&& !this.state.containsSymbols*/ && !this.state.isTooLong
+      /*&& this.state.containsWords*/) {
+      this.setState({
         user: '',
         todo: '',
-      })
+      });
     }
   }
-  changeInput(e) { 
 
-    if(e.target.value.length > 10) { //меняем стейт для условного рендеринга
+  changeInput(e) {
+    if (e.target.value.length > 10) {
       this.setState({
         isTooLong: true,
       });
@@ -41,8 +44,8 @@ class App extends React.Component {
         isTooLong: false,
       });
     }
-    
-    if(/[^\w\s]/.test(e.target.value)  ) { //не(^) кириллица и не символы (w), пробелы допустимы(s)
+
+    /*if (/[^\w\s]/.test(e.target.value)) {
       this.setState({
         containsSymbols: true,
       });
@@ -50,34 +53,42 @@ class App extends React.Component {
       this.setState({
         containsSymbols: false,
       });
-    }
+    }*/
+
+   /* if (e.target.value.replace(/ /g, '').replace(/[0-9]/g, '').length === 0) {
+      this.setState({
+        containsWords: false,
+      });
+    } else {
+      this.setState({
+        containsWords: true,
+      });
+    }*/
 
     this.setState({
       todo: e.target.value,
-      inValidLength: false,
+      isEmpty: false,
     });
   }
-  clickOnButton(todo, user, ) {
-    if (this.state.user.length > 0 && this.state.todo.length > 0 
-      && !this.state.isTooLong && !this.state.containsSymbols 
-      && this.state.containsWords) {
 
+  clickOnButton(todo, user) {
+    if (this.state.user.length > 0 && this.state.todo.length > 0
+      && !this.state.isTooLong /*&& !this.state.containsSymbols*/
+      /*&& this.state.containsWords*/) {
       const newTodo = {
         completed: false,
-        id: prepearedTodos.length + 1, //Задание, в реале лучше говорить с бэкендом или юзать библиотеку для генерации строковых id
+        id: prepearedTodos.length + 1,
         title: todo,
-        user: [users.find(person => person.name === user)], //Потому что в prepearedTodos .find возвращает массив с одним {}
+        user: [users.find(person => person.name === user)],
         userId: users.find(person => person.name === user)?.id,
-      }
-      this.setState((state) => {
-        return {
-          listOfTodos: [
-            newTodo,
-            ...state.listOfTodos
-          ]
-        }
-      })
+      };
 
+      this.setState(state => ({
+        listOfTodos: [
+          newTodo,
+          ...state.listOfTodos,
+        ],
+      }));
     }
 
     if (user.length === 0) {
@@ -88,126 +99,70 @@ class App extends React.Component {
 
     if (todo.length === 0) {
       this.setState({
-        inValidLength: true,
+        isEmpty: true,
       });
     }
   }
+
   render() {
-    const {listOfTodos, user, todo, inValidSelect, inValidLength, 
-      isTooLong, containsSymbols, todoId } = this.state;
-    console.log(listOfTodos);
-    console.log('render');
-    console.log(inValidSelect)
+    const { listOfTodos, user, todo, inValidSelect, isEmpty,
+      isTooLong, /*containsSymbols,*/ /*containsWords*/ } = this.state;
+
     return (
       <div className="App">
-        <h1>Add todo form</h1>
-        <form 
-          method="POST"
-          action="/api/userTodo"
-          onSubmit={(e) => this.formSubmit(e, user, todo, containsSymbols, isTooLong)}
-        >
-          <select
-            name="user" //соотв св-ву в state
-            value={user}  //передаём в state
-            onChange={(e)=> this.changeInSelect(e)}
+        <div>
+          <h1>Add todo form</h1>
+          <form
+            className="form"
+            method="POST"
+            action="/api/userTodo"
+            onSubmit={e => this.formSubmit(e, user, todo)}
           >
-            <option>Choose a user</option>
-            {listOfTodos.map(person => (
-              <option 
-                key={person.id}
-                value={person.name} //передаём в state
-              >
-                {person.name}
-              </option>
-            ))}
-          </select>
-          {inValidSelect && <p>Please choose a user</p>}
-          <label>
-            <input
-              name="todo" 
-              placeholder="Add something to do"
-              value={todo} 
-              onChange={(e)=> this.changeInput(e)}
+            <select
+              className="form__field"
+              name="user"
+              value={user}
+              onChange={e => this.changeInSelect(e)}
             >
-            </input>
-          </label>
-          {inValidLength && <p>Please enter a Todo</p>}
-          {isTooLong && <p>A Todo shouldn't be longer than 10 characters</p>}
-          {containsSymbols 
-            && <p>A Todo should contain only latin characters or digits</p>}
-          <button 
-            type="submit"
-            onClick={() => (
-              this.clickOnButton(todo, user, todoId, listOfTodos, 
-                isTooLong, containsSymbols)
-            )}    
-          >
-            Add
-          </button>
-        </form>
-        <h2>To Do List:</h2>
-        <div className="uno">
-        {listOfTodos.map((user, index) => {
-          console.log(user.todo.length)
-          if(user.todo.length > 0) { //выводить только юзеров, у которых есть дело
-            return (
-              <div 
-                key={user.id}
-                className="tres"
-              > 
-              <p>
-                  User { ' ' }
-                <span className="quatro">{user.name} </span> 
-                  needs to: 
-              </p>
-                {listOfTodos[index].todo.map(item=> (
-                  <p className="dos" key={item.id}> 
-                    <span>{item.title}</span> 
-                    <span>User id: {item.userId} </span> 
-                  </p>
-                ))} 
-              </div>
-            )
-          } 
-          return false //пропуcтить остальные итерации
-        })}
+              <option>Choose a user</option>
+              {users.map(person => (
+                <option
+                  key={person.id}
+                  value={person.name}
+                >
+                  {person.name}
+                </option>
+              ))}
+            </select>
+            {inValidSelect && <p>Please choose a user</p>}
+            <label>
+              <input
+                className="form__field form__field--wide"
+                name="todo"
+                placeholder="Add something to do"
+                value={todo}
+                onChange={e => this.changeInput(e)}
+              />
+            </label>
+            {isEmpty && <p>Please enter a Todo</p>}
+            {isTooLong
+              && <p>A Todo shouldn&apos;t be longer than 10 characters</p>}
+            {/*containsSymbols
+              && <p>A Todo should contain only latin characters or digits</p>*/}
+            {/*!containsWords && <p>Please, enter the words</p>*/}
+            <button
+              type="submit"
+              className="form__field"
+              onClick={() => (this.clickOnButton(todo, user))}
+            >
+              Add
+            </button>
+          </form>
         </div>
-        
+        <ToDoList listOfTodos={listOfTodos} />
       </div>
-    )
-  };
+    );
+  }
 }
 
-
-<Form 
-  user={user}
-  todo={todo}
-  todoId={todoId}
-  containsSymbols={containsSymbols}
-  isTooLong={isTooLong}
-  listOfTodos={listOfTodos}
-  inValidSelect={inValidSelect}
-  inValidLength={inValidLength}
-  changeInSelect={this.changeInSelect}
-  formSubmit={this.formSubmit}
-  changeInput={this.changeInput}
-  clickOnButton={this.clickOnButton}
-/>
-
-user={user}
-todo={todo}
-todoId={todoId}
-containsSymbols={containsSymbols}
-isTooLong={isTooLong}
-listOfTodos={listOfTodos}
-inValidSelect={inValidSelect}
-inValidLength={inValidLength}
-
-changeInSelect={this.changeInSelect}
-formSubmit={this.formSubmit}
-changeInput={this.changeInput}
-clickOnButton={this.clickOnButton}
-
-const {user, todo, todoId, listOfTodos, containsSymbols, 
-isTooLong, inValidSelect, inValidLength,
-changeInSelect, changeInput, formSubmit, clickOnButton} = this.props;
+export default App;
